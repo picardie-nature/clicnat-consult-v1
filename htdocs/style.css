@@ -1,10 +1,19 @@
 html, body {
 	height: 100%;
 }
-
+.tscroll {
+	height: 650px;
+	max-height: 650px;
+	overflow: scroll;
+}
 #carte {
 	width:100%;
 	height: 100%;
+}
+
+#carte2 {
+	width: 100%;
+	height: 650px;
 }
 
 div.olMapViewport {

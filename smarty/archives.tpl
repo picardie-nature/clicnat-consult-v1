@@ -98,10 +98,17 @@
 					le.html("");
 					for (var i=0; i<data.especes.length;i++) {
 						var e = data.especes[i];
+						var nom_1 = e['nom_f'];
+						var nom_2 = e['nom_s'];
+						if (nom_1 == null) {
+							nom_1 = nom_2;
+							nom_2 = '';
+						}
 						le.append(
-							"<a href='#' id_espece='' class='list-group-item item-espece'><h4>"+e['nom_f']+"</h4>"+
-							"<p>"+e['nom_s']+"</p></a>"
+							"<a href='#' id_espece='' class='list-group-item item-espece'><h4>"+nom_1+"</h4>"+
+							"<p>"+nom_2+"</p></a>"
 						);
+
 					}
 					$('.item-espece').click(function () {
 						alert("une fois terminé la répartition de l'espèce apparaîtra sur la carte");
