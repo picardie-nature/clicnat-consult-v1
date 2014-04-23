@@ -9,6 +9,7 @@
 		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/openlayers/2.13.1/OpenLayers.js"></script>
 		<script type="text/javascript" src="http://maps.picardie-nature.org/carto.js"></script>
 		<script type="text/javascript" src="ol_commune_gml.js"></script>
+		<script type="text/javascript" src="consult.js"></script>
 		{if $js_init}
 			<script>{$js_init}();</script>
 		{/if}

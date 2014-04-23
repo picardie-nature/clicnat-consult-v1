@@ -22,7 +22,7 @@
 				</table>
 				<div id="t_especes" style="display:none;">
 					<form method="post" action="index.php" id="form_liste_especes">
-						<input type="text" name="id" value="" id="extraction_id"/>
+						<input type="hidden" name="id" value="" id="extraction_id"/>
 						Affichage
 						<select name="mode_liste_especes">
 							<option value="toutes">Afficher toutes les espèces</option>
@@ -44,84 +44,6 @@
 </div>
 <script>
 	//{literal}
-	function mongo_aff_date(d) {
-		var _d = new Date(d.sec*1000);
-		return _d.toLocaleString();
-	}
-
-	function charge_liste_requetes() {
-		var tb = $('#t_requetes > tbody');
-		tb.html("<tr><td colspan=3>Chargement en cours</td></tr>");
-		$.ajax({
-			url: '?'+$.param({
-				t: "json",
-				a: "liste_archives"
-			}),
-			success: function (data) {
-				tb.html("");
-				for (var i=0;i<data.carres.length;i++) {
-					var c = data.carres[i];
-					tb.append(
-						"<tr class='mongo_"+c._id['$id']+"'>"+
-						"	<td>"+mongo_aff_date(c.date_creation)+"</td>"+
-						"	<td>"+c.nom+"</td>"+
-						"	<td>"+c.carres.length+"</td>"+
-						"	<td><button class='btn btn-default btn-sm btn-primary ouvre_archive' type='button' mongo_id='"+c._id['$id']+"'><span class='glyphicon glyphicon-folder-open'></span></button></td>"+
-						"</tr>"
-					);
-				}
-				console.log('ok');
-				$('.ouvre_archive').click(function () {
-					$('#extraction_id').val($(this).attr('mongo_id'));
-					$('#t_requetes').hide();
-					$('#t_especes').show();
-				});
-
-			}
-		});
-	}
-
-	function init_archives() {
-		charge_liste_requetes();
-
-		var carte = new Carto("carte2");
-
-		$('#form_liste_especes').on('submit', function () {
-			$.ajax({
-				url: 'index.php?'+$(this).serialize(),
-				success: function (data) {
-					if (data.err == 1) {
-						alert(data.msg);
-						return;
-					}
-					var le = $('#liste_especes');
-					le.html("");
-					for (var i=0; i<data.especes.length;i++) {
-						var e = data.especes[i];
-						var nom_1 = e['nom_f'];
-						var nom_2 = e['nom_s'];
-						if (nom_1 == null) {
-							nom_1 = nom_2;
-							nom_2 = '';
-						}
-						le.append(
-							"<a href='#' id_espece='' class='list-group-item item-espece'><h4>"+nom_1+"</h4>"+
-							"<p>"+nom_2+"</p></a>"
-						);
-
-					}
-					$('.item-espece').click(function () {
-						alert("une fois terminé la répartition de l'espèce apparaîtra sur la carte");
-						return false;
-					});
-				},
-				error: function () {
-					alert('pas de liste');
-				}
-			});
-			return false;
-		});
-	}
 	//{/literal}
 </script>
 {include file="pied.tpl" js_init="init_archives"}
