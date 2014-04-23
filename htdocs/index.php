@@ -159,13 +159,17 @@ class Consult extends clicnat_smarty {
 						} catch (Exception $e) {
 							$docs = array();
 						}
-
+						$ref = $esp->get_referentiel_regional();
 						$data['especes'][] = array(
 							'id_espece'=>$esp->id_espece,
 							'nom_f' => $esp->nom_f,
 							'nom_s' => $esp->nom_s,
 							'classe' => $esp->classe,
-							'docs' => $docs 
+							'docs' => $docs,
+							'rarete' => isset($ref['indice_rar'])?$ref['indice_rar']:null,
+							'menace' => isset($ref['categorie'])?$ref['categorie']:null,
+							'determinant_znieff' => $esp->determinant_znieff,
+							'invasif' => $esp->invasif
 						);
 					}
 					break;

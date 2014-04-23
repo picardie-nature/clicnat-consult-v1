@@ -221,13 +221,29 @@ function init_archives() {
 					var e = data.especes[i];
 					var nom_1 = e['nom_f'];
 					var nom_2 = e['nom_s'];
+			
 					if (nom_1 == null) {
 						nom_1 = nom_2;
 						nom_2 = '';
 					}
+					var rarete = "";
+					if (e['rarete'] != null) {
+						rarete = "<span class='label label-info'>Rareté : "+e['rarete']+"</span>";
+					}
+					var menace = "";
+					if (e['menace'] != null) {
+						menace = "<span class='label label-info'>Menace : "+e['menace']+"</span>";
+					}
+					var znieff = "";
+					if (e['determinant_znieff']) {
+						znieff = "<span class='label label-info'>Déterminant ZNIEFF</span>";
+					}
 					le.append(
 						"<a href='#' id_espece='"+e['id_espece']+"' class='list-group-item item-espece'><h4>"+nom_1+"</h4>"+
-						"<p>"+nom_2+"</p></a>"
+						"<p>"+nom_2+"</p>"+
+						"<p>"+rarete+" "+menace+" "+znieff+"</p>"+
+						"</a>"
+
 					);
 
 				}
