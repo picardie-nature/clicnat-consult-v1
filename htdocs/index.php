@@ -18,6 +18,8 @@ require_once(OBS_DIR.'smarty.php');
 class Consult extends clicnat_smarty {
 	protected $db;
 
+	const limite_nb_carres = 1000;
+
 	private static function mongodb() {
 		static $mdb;
 		if (!isset($mdb)) {
@@ -75,6 +77,10 @@ class Consult extends clicnat_smarty {
 
 	private function extraction_carres($filtre="toutes") {
 		$extraction = new bobs_extractions($this->db);
+
+		if (count($_SESSION['carres']) > self::limite_nb_carres)
+			throw new Exception('trop de carrés dans la requête');
+
 		foreach ($_SESSION['carres'] as $c) {
 			$extraction->ajouter_condition(new bobs_ext_c_index_atlas(2154,1000,$c['lon'], $c['lat']));
 			$extraction->ajouter_condition(new bobs_ext_c_sans_tag_invalide());
