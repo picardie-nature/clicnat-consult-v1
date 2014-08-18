@@ -77,6 +77,10 @@ class Consult extends clicnat_smarty {
 		$extraction = new bobs_extractions($this->db);
 		foreach ($_SESSION['carres'] as $c) {
 			$extraction->ajouter_condition(new bobs_ext_c_index_atlas(2154,1000,$c['lon'], $c['lat']));
+			$extraction->ajouter_condition(new bobs_ext_c_sans_tag_invalide());
+			$extraction->ajouter_condition(new bobs_ext_c_indice_qualite(array(3,4)));
+			$extraction->ajouter_condition(new bobs_ext_c_interval_date('01/01/1985',strftime("31/12/%Y",mktime())));
+			$extraction->ajouter_condition(new bobs_ext_c_effectif_superieur(0));
 		}
 		switch ($filtre) {
 			case 'znieff':
@@ -169,7 +173,8 @@ class Consult extends clicnat_smarty {
 							'rarete' => isset($ref['indice_rar'])?$ref['indice_rar']:null,
 							'menace' => isset($ref['categorie'])?$ref['categorie']:null,
 							'determinant_znieff' => $esp->determinant_znieff,
-							'invasif' => $esp->invasif
+							'invasif' => $esp->invasif,
+							'carres' => null//$extraction->carres_espece($esp->id_espece)
 						);
 					}
 					break;
