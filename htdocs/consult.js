@@ -210,6 +210,10 @@ function init_archives() {
 		}
 		$.ajax({
 			url: 'index.php?'+$(this).serialize(),
+			beforeSend: function (xhr, settings) {
+				var le = $('#liste_especes');
+				le.html("Chargement des résultats...");
+			},
 			success: function (data) {
 				if (data.err == 1) {
 					alert(data.msg);
