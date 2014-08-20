@@ -107,6 +107,14 @@ class Consult extends clicnat_smarty {
 		return $extraction;
 	}
 
+	private function extraction_utilisateur($id) {
+		$extr = $this->mongodb()->selections->findOne(array("_id" => new MongoId($id)));
+		if ($_SESSION['id_utilisateur'] != $extr['id_utilisateur']) {
+			throw new Exception('pas propriétaire de la liste');
+		}
+		return $extr;
+	}
+
 	public function before_json() {
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
@@ -155,10 +163,7 @@ class Consult extends clicnat_smarty {
 					}
 					break;
 				case 'liste_especes_extraction':
-					$extr = $this->mongodb()->selections->findOne(array("_id" => new MongoId($_GET['id'] )));
-					if ($_SESSION['id_utilisateur'] != $extr['id_utilisateur']) {
-						throw new Exception('pas propriétaire de la liste');
-					}
+					$extr = $this->extraction_utilisateur($_GET['id']);
 					$_SESSION['carres'] = $extr['carres'];
 					$data['carres_requete'] = $extr['carres'];
 					$extraction = $this->extraction_carres($_GET['mode_liste_especes']);
@@ -183,6 +188,15 @@ class Consult extends clicnat_smarty {
 							'carres' => null//$extraction->carres_espece($esp->id_espece)
 						);
 					}
+					break;
+				case 'espece_carres_extraction':
+					// liste des carrés ou l'espece est présente
+
+					$extr = $this->extraction_utilisateur($_GET['id_requete']);
+					$_SESSION['carres'] = $extr['carres'];
+					$extraction = $this->extraction_carres('toutes');
+					$extraction->ajouter_condition(new bobs_ext_c_espece($_GET['id_espece']));
+					$data['carres'] = $extraction->carres(2154,1000);
 					break;
 
 			}

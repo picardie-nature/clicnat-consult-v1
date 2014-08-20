@@ -111,6 +111,24 @@ function affiche_carre_requete(id_requete,layer) {
 	layer.map.zoomToExtent(layer.getDataExtent());
 }
 
+function affiche_carre_espece_requete(id_requete, id_espece, layer) {
+	var args = {
+		t: 'json',
+		a: 'espece_carres_extraction',
+		id_requete: id_requete,
+		id_espece: id_espece
+	};
+	$.ajax({
+		url: 'index.php?'+$.param(args),
+		success: function (data) {
+			for (var i=0;i<data.carres.length;i++) {
+				var f = carre_1km(new OpenLayers.LonLat(data.carres[i]['x0']*1000, data.carres[i]['y0']*1000));
+				layer.addFeatures([f]);
+			}
+		}
+	});
+}
+
 function init_new_cons() {
 	carte = new Carto('carte');
 	carte.layer_commune = new OpenLayers.Layer.Vector('Limite commune');
@@ -243,7 +261,7 @@ function init_archives() {
 						znieff = "<span class='label label-info'>Déterminant ZNIEFF</span>";
 					}
 					le.append(
-						"<a href='#' id_espece='"+e['id_espece']+"' class='list-group-item item-espece'><h4>"+nom_1+"</h4>"+
+						"<a href='#' lbl='"+nom_1+" "+nom_2+"' id_requete='"+id_requete+"' id_espece='"+e['id_espece']+"' class='list-group-item item-espece'><h4>"+nom_1+"</h4>"+
 						"<p>"+nom_2+"</p>"+
 						"<p>"+rarete+" "+menace+" "+znieff+"</p>"+
 						"</a>"
@@ -252,8 +270,19 @@ function init_archives() {
 
 				}
 				$('.item-espece').click(function () {
-					alert("une fois terminé la répartition de l'espèce apparaîtra sur la carte");
-					alert($(this).attr('id_espece'));
+					var id_espece = $(this).attr('id_espece');
+					var id_requete = $(this).attr('id_requete');
+					var r = Math.round(Math.random()*255);
+					var g = Math.round(Math.random()*255);
+					var b = Math.round(Math.random()*255);
+					var layer = new OpenLayers.Layer.Vector($(this).attr('lbl'),{
+						style: {
+							strokeColor: 'rgb('+r+','+g+','+b+')',
+							fillColor: 'rgb('+r+','+g+','+b+')'
+						}
+					});
+					carte_archives.map.addLayers([layer]);
+					affiche_carre_espece_requete(id_requete, id_espece, layer)
 					return false;
 				});
 			},

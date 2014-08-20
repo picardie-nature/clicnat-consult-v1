@@ -42,8 +42,4 @@
 		</div>
 	</div>
 </div>
-<script>
-	//{literal}
-	//{/literal}
-</script>
 {include file="pied.tpl" js_init="init_archives"}
