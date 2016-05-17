@@ -46,9 +46,10 @@ class Consult extends clicnat_smarty {
 				$_SESSION['id_utilisateur'] = false;
 				$this->ajoute_alerte('danger', "Nom d'utilisateur ou mot de passe incorrect");
 			} else {
-				if (!$utilisateur->acces_chiros) {
+				if (!$utilisateur->prop('dreal') == 1) {
 					$_SESSION['id_utilisateur'] = false;
-					$this->ajoute_alerte('danger', "Accès réservé aux membres du réseau Chiros");
+					$prop = $utilisateur->prop('dreal');
+					$this->ajoute_alerte('danger', "Accès réservé - demander l'activation de votre compte si nécessaire ($prop)");
 				} else {
 					if (!$utilisateur->auth_ok(trim($_POST['clicnat_pwd']))) {
 						$_SESSION['id_utilisateur'] = false;
