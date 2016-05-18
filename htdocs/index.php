@@ -14,6 +14,8 @@ require_once(OBS_DIR.'element.php');
 require_once(OBS_DIR.'espece.php');
 require_once(OBS_DIR.'smarty.php');
 
+if (!defined('MONGO_DB_STR'))
+	define('MONGO_DB_STR', "mongodb://localhost:27017");
 
 class Consult extends clicnat_smarty {
 	protected $db;
@@ -23,7 +25,7 @@ class Consult extends clicnat_smarty {
 	private static function mongodb() {
 		static $mdb;
 		if (!isset($mdb)) {
-			$mc = new MongoClient("mongodb://localhost:27017");
+			$mc = new MongoClient(MONGO_DB_STR);
 			$mdb = $mc->clicnat_instructeur;
 		}
 		return $mdb;
