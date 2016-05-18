@@ -48,9 +48,9 @@ class Consult extends clicnat_smarty {
 				$_SESSION['id_utilisateur'] = false;
 				$this->ajoute_alerte('danger', "Nom d'utilisateur ou mot de passe incorrect");
 			} else {
-				if (!$utilisateur->prop('dreal') == 1) {
+				if (!$utilisateur->prop('agent') == 1) {
 					$_SESSION['id_utilisateur'] = false;
-					$prop = $utilisateur->prop('dreal');
+					$prop = $utilisateur->prop('agent');
 					$this->ajoute_alerte('danger', "Accès réservé - demander l'activation de votre compte si nécessaire ($prop)");
 				} else {
 					if (!$utilisateur->auth_ok(trim($_POST['clicnat_pwd']))) {
@@ -118,6 +118,14 @@ class Consult extends clicnat_smarty {
 		$extraction->ajouter_condition(new bobs_ext_c_indice_qualite([3,4]));
 		$extraction->ajouter_condition(new bobs_ext_c_interval_date('01/01/1985',strftime("31/12/%Y",mktime())));
 		$extraction->ajouter_condition(new bobs_ext_c_effectif_superieur(0));
+
+		// limite départementale si prop agent_departement définit
+		$u = get_utilisateur($this->db, $_SESSION['id_utilisateur']);
+		$num_dept = $u->prop('agent_departement');
+		if ($num_dept) {
+			$dept = bobs_espace_departement::get_by_ref($this->db, $num_dept);
+			$extraction->ajouter_condition(new bobs_ext_c_departement($dept->id_espace));
+		}
 		$sel = $this->sel();
 		$sel->vider();
 		$extraction->dans_selection($sel);
