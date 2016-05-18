@@ -22,6 +22,7 @@
 				</table>
 				<div id="t_especes" style="display:none;">
 					<form method="post" action="index.php" id="form_liste_especes">
+						<a href="javascript:;" id="retour"><span class="btn btn-info glyphicon glyphicon-arrow-left"></span></a>
 						<input type="hidden" name="id" value="" id="extraction_id"/>
 						Affichage
 						<select name="mode_liste_especes">

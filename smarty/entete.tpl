@@ -46,7 +46,6 @@
 				<li class="dropdown">
 				  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user"></span> {$utl}</a>
 				  <ul class="dropdown-menu">
-					<li><a href="#">Mes infos</a></li>
 					<li class="divider"></li>
 					<li><a href="?fermer=1">Deconnexion <span class="glyphicon glyphicon-off"></span></a></li>
 				  </ul>
