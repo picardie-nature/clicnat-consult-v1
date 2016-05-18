@@ -78,7 +78,33 @@ class Consult extends clicnat_smarty {
 	public function before_archives() {
 	}
 
-	private function extraction_carres($filtre="toutes") {
+	private function sous_extraction($sel, $filtre) {
+		$extraction = new bobs_extractions($this->db);
+		$extraction->ajouter_condition(new bobs_ext_c_selection($sel->id_selection));
+		switch ($filtre) {
+			case 'znieff':
+				$extraction->ajouter_condition(new bobs_ext_c_espece_det_znieff());
+				break;
+			case 'rare':
+				$extraction->ajouter_condition(new bobs_ext_c_ref_rarete(['R','TR','E','D']));
+				break;
+			case 'menace':
+				$extraction->ajouter_condition(new bobs_ext_c_ref_menace(['VU','EN','CR']));
+				break;
+			case 'toutes':
+				break;
+			default:
+				throw new Exception("filtre invalide $filtre");
+				break;
+		}
+		return $extraction;
+	}
+
+	private function sel() {
+		return bobs_selection::par_nom_ou_creer($this->db, -1, "consult#{$_SESSION['id_utilisateur']}");
+	}
+
+	private function extraction_carres() {
 		$extraction = new bobs_extractions($this->db);
 
 		if (count($_SESSION['carres']) > self::limite_nb_carres)
@@ -86,28 +112,22 @@ class Consult extends clicnat_smarty {
 
 		foreach ($_SESSION['carres'] as $c) {
 			$extraction->ajouter_condition(new bobs_ext_c_index_atlas(2154,1000,$c['lon'], $c['lat']));
-			$extraction->ajouter_condition(new bobs_ext_c_sans_tag_invalide());
-			$extraction->ajouter_condition(new bobs_ext_c_indice_qualite(array(3,4)));
-			$extraction->ajouter_condition(new bobs_ext_c_interval_date('01/01/1985',strftime("31/12/%Y",mktime())));
-			$extraction->ajouter_condition(new bobs_ext_c_effectif_superieur(0));
 		}
-		switch ($filtre) {
-			case 'znieff':
-				$extraction->ajouter_condition(new bobs_ext_c_espece_det_znieff());
-				break;
-			case 'rare':
-				$extraction->ajouter_condition(new bobs_ext_c_ref_rarete(array('R','TR','E','D')));
-				break;
-			case 'menace':
-				$extraction->ajouter_condition(new bobs_ext_c_ref_menace(array('VU','EN','CR')));
-				break;
-			case 'toutes':
-				break;
-			default:
-				throw new Exception('filtre invalide');
-				break;
-		}
-		return $extraction;
+
+		$extraction->ajouter_condition(new bobs_ext_c_sans_tag_invalide());
+		$extraction->ajouter_condition(new bobs_ext_c_indice_qualite([3,4]));
+		$extraction->ajouter_condition(new bobs_ext_c_interval_date('01/01/1985',strftime("31/12/%Y",mktime())));
+		$extraction->ajouter_condition(new bobs_ext_c_effectif_superieur(0));
+		$sel = $this->sel();
+		$sel->vider();
+		$extraction->dans_selection($sel);
+
+		$smax = new bobs_selection_filtre_superficie_max($this->db);
+		$smax->set('id_selection', $sel->id_selection);
+		$smax->set('smax', 1000*1000);
+		$smax->prepare();
+		$smax->execute();
+		return $sel;
 	}
 
 	private function extraction_utilisateur($id) {
@@ -135,32 +155,36 @@ class Consult extends clicnat_smarty {
 						$data['carres'][] = array("lon"=>(int)$lon,"lat"=>(int)$lat);
 					}
 					$_SESSION['carres'] = $data['carres'];
-					$extraction = $this->extraction_carres();
-					$data['n_citation'] = $extraction->compte();
+					$sel = $this->extraction_carres();
+					$_SESSION['ids'] = $sel->citations()->ids();
+					$data['n_citation'] = $sel->n();
 
-					$extraction = $this->extraction_carres('rare');
+					$extraction = $this->sous_extraction($sel, 'rare');
 					$data['n_espece_rare'] = $extraction->especes()->count();
+					$data['sql'] = $extraction->apercu_sql();
 
-					$extraction = $this->extraction_carres('menace');
+					$extraction = $this->sous_extraction($sel, 'menace');
 					$data['n_espece_menace'] = $extraction->especes()->count();
 
-					$extraction = $this->extraction_carres('znieff');
+					$extraction = $this->sous_extraction($sel, 'znieff');
 					$data['n_espece_znieff'] = $extraction->especes()->count();
 					break;
 				case 'enregistrer_selection':
 					$sels = $this->mongodb()->selections;
-					$ele = array(
+					$data = [
 						"id_utilisateur" => (int)$_SESSION['id_utilisateur'],
 						"nom" => $_GET['nom'],
 						"carres" => $_SESSION['carres'],
+						"ids" => $_SESSION['ids'],
 						"date_creation" => new MongoDate()
-					);
-					$sels->insert($ele, array("fsync"=>true));
-					$data = $ele;
+					];
+					$sels->insert($data, ["fsync"=>true]);
 					break;
 				case 'liste_archives':
 					$data['carres'] = array();
-					$liste = $this->mongodb()->selections->find(array("id_utilisateur" =>  (int)$_SESSION['id_utilisateur']));
+					$liste = $this->mongodb()->selections->find([
+						"id_utilisateur" =>  (int)$_SESSION['id_utilisateur']
+					]);
 					foreach ($liste as $e) {
 						$data['carres'][] = $e;
 					}
@@ -169,8 +193,11 @@ class Consult extends clicnat_smarty {
 					$extr = $this->extraction_utilisateur($_GET['id']);
 					$_SESSION['carres'] = $extr['carres'];
 					$data['carres_requete'] = $extr['carres'];
-					$extraction = $this->extraction_carres($_GET['mode_liste_especes']);
-					$data['especes'] = array();
+					$sel = $this->sel();
+					$sel->vider();
+					$sel->ajouter_ids($extr['ids']);
+					$extraction = $this->sous_extraction($sel, $_GET['mode_liste_especes']);
+					$data['especes'] = [];
 					foreach ($extraction->especes() as $esp) {
 						try {
 							$docs = $esp->documents_liste();
@@ -197,7 +224,10 @@ class Consult extends clicnat_smarty {
 
 					$extr = $this->extraction_utilisateur($_GET['id_requete']);
 					$_SESSION['carres'] = $extr['carres'];
-					$extraction = $this->extraction_carres('toutes');
+					$sel = $this->sel();
+					$sel->vider();
+					$sel->ajouter_ids($extr['ids']);
+					$extraction = $this->sous_extraction($sel, 'toutes');
 					$extraction->ajouter_condition(new bobs_ext_c_espece($_GET['id_espece']));
 					$data['carres'] = $extraction->carres(2154,1000);
 					break;
@@ -205,7 +235,7 @@ class Consult extends clicnat_smarty {
 			}
 			echo json_encode($data);
 		} catch (Exception $e) {
-			echo json_encode(array("err" => 1, "msg" => $e->getMessage()));
+			echo json_encode(array("err" => 1, "msg" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine(), "trace" => $e->getTrace()));
 		}
 	}
 
