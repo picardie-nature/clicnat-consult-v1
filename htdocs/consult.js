@@ -56,6 +56,21 @@ function mongo_aff_date(d) {
 	return _d.toLocaleString();
 }
 
+function ouvre_archive_url() {
+	var a = document.createElement('a');
+	a.href = document.location.href;
+	var args = a.search.replace(/^\?/,'').split('&');
+	for (var i=0;i<args.length;i++) {
+		if (args[i].split('=')[0] == 'id') {
+			var id = args[i].split('=')[1];
+			affiche_carre_requete(id, carte_archives.layer_requete);
+			$('#extraction_id').val(id);
+			$('#t_requetes').hide();
+			$('#t_especes').show();
+		}
+	}
+}
+
 function charge_liste_requetes() {
 	var tb = $('#t_requetes > tbody');
 	tb.html("<tr><td colspan=3>Chargement en cours</td></tr>");
@@ -85,6 +100,8 @@ function charge_liste_requetes() {
 				affiche_carre_requete($(this).attr('mongo_id'), carte_archives.layer_requete);
 			});
 
+			// ouvre l'id passé dans l'url si il est présent
+			ouvre_archive_url();
 		}
 	});
 }
@@ -173,6 +190,7 @@ function init_new_cons() {
 					return false;
 				}
 				// traitement ok
+				document.location.href = '?t=archives&id='+data['_id']['$id'];
 			}
 		});
 		return false;
@@ -211,7 +229,6 @@ function init_new_cons() {
 
 function init_archives() {
 	charge_liste_requetes();
-
 	carte_archives = new Carto("carte2");
 	carte_archives.layer_requete = new OpenLayers.Layer.Vector('Emprise requête');
 	carte_archives.map.addLayers([carte_archives.layer_requete]);
