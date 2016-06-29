@@ -2,6 +2,46 @@
 var carte_archives = null;
 var requetes = null;
 
+function exportToCsv(filename, rows) {
+	var processRow = function (row) {
+		var finalVal = '';
+		for (var j = 0; j < row.length; j++) {
+			var innerValue = row[j] === null ? '' : row[j].toString();
+			if (row[j] instanceof Date) {
+				innerValue = row[j].toLocaleString();
+			};
+			var result = innerValue.replace(/"/g, '""');
+			if (result.search(/("|,|\n)/g) >= 0)
+				result = '"' + result + '"';
+			if (j > 0)
+				finalVal += ',';
+			finalVal += result;
+		}
+		return finalVal + '\n';
+	};
+
+	var csvFile = '';
+	for (var i = 0; i < rows.length; i++) {
+		csvFile += processRow(rows[i]);
+        }
+
+        var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+        if (navigator.msSaveBlob) { // IE 10+
+		navigator.msSaveBlob(blob, filename);
+        } else {
+		var link = document.createElement("a");
+		if (link.download !== undefined) { // feature detection
+			// Browsers that support HTML5 download attribute
+			var url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute("download", filename);
+			link.style.visibility = 'hidden';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		}
+        }
+}
 function liste_carres_layer_formulaire(layer, id_champ_formulaire) {
 	var champ = $('#'+id_champ_formulaire);
 	champ.val('');
@@ -13,7 +53,7 @@ function liste_carres_layer_formulaire(layer, id_champ_formulaire) {
 }
 
 /**
- * @brief point 900913 => carree L93
+ * @brief point 900913 => carré L93
  * @return OpenLayers.Feature.Vector
  */
 function carre_2154_1km(m_lonlat) {
@@ -56,55 +96,206 @@ function mongo_aff_date(d) {
 	return _d.toLocaleString();
 }
 
-function ouvre_archive_url() {
-	var a = document.createElement('a');
-	a.href = document.location.href;
-	var args = a.search.replace(/^\?/,'').split('&');
-	for (var i=0;i<args.length;i++) {
-		if (args[i].split('=')[0] == 'id') {
-			var id = args[i].split('=')[1];
-			affiche_carre_requete(id, carte_archives.layer_requete);
-			$('#extraction_id').val(id);
-			$('#t_requetes').hide();
-			$('#t_especes').show();
+var EspeceRow = React.createClass({
+	render: function () {
+		var nom_1 = this.props.e.nom_f;
+		var nom_2 = this.props.e.nom_s;
+		if (nom_1 == null) {
+			nom_1 = nom_2;
+			nom_2 = '';
 		}
+		var rarete_style = this.props.e.rarete == null ? {display:'none'}:{display:'inline'};
+		var menace_style = this.props.e.menace == null ? {display:'none'}:{display:'inline'};
+		var determ_style = this.props.e.determinant_znieff ? {display:'none'}:{display:'inline'};
+
+		return (
+			<a className="list-group-item">
+				<h4>{nom_1}</h4>
+				<p>{nom_2} <span className="pull-right">{this.props.n_citations} citations</span></p>
+				<span className='label label-info' style={rarete_style}>Rareté : {this.props.e.rarete}</span>
+				<span className='label label-info' style={menace_style}>Menace : {this.props.e.menace}</span>
+				<span className='label label-info' style={determ_style}>Déterminant ZNIEFF</span>
+			</a>
+		);
 	}
-}
-
-function charge_liste_requetes() {
-	var tb = $('#t_requetes > tbody');
-	tb.html("<tr><td colspan=3>Chargement en cours</td></tr>");
-	$.ajax({
-		url: '?'+$.param({
-			t: "json",
-			a: "liste_archives"
-		}),
-		success: function (data) {
-			requetes = data;
-			tb.html("");
-			for (var i=0;i<data.carres.length;i++) {
-				var c = data.carres[i];
-				tb.append(
-					"<tr class='mongo_"+c._id['$id']+"'>"+
-					"	<td>"+mongo_aff_date(c.date_creation)+"</td>"+
-					"	<td>"+c.nom+"</td>"+
-					"	<td>"+c.carres.length+"</td>"+
-					"	<td><button class='btn btn-default btn-sm btn-primary ouvre_archive' type='button' mongo_id='"+c._id['$id']+"'><span class='glyphicon glyphicon-folder-open'></span></button></td>"+
-					"</tr>"
-				);
-			}
-			$('.ouvre_archive').click(function () {
-				$('#extraction_id').val($(this).attr('mongo_id'));
-				$('#t_requetes').hide();
-				$('#t_especes').show();
-				affiche_carre_requete($(this).attr('mongo_id'), carte_archives.layer_requete);
-			});
-
-			// ouvre l'id passé dans l'url si il est présent
-			ouvre_archive_url();
+});
+var ListeEspeces = React.createClass({
+	getInitialState: function () {
+		return { visible: true, liste: [], en_cours: false }
+	},
+	retour: function () {
+		this.props.listerequetes.setState({visible:true});
+	},
+	downloadListe: function (event) {
+		var rows = [[
+			'id_espece', 'classe', 'nom_f', 'nom_s', 'rarete', 'menace',
+    			'determinant_znieff', 'invasif', 'n_carres'
+		]];
+		for (var i=0; i<this.state.liste.length; i++) {
+			var e = this.state.liste[i];
+			rows.push([
+				e.id_espece,
+				e.classe,
+				e.nom_f,
+				e.nom_s,
+				e.rarete,
+				e.menace,
+				e.determinant_znieff,
+				e.invasif,
+				e.carres.length
+			]);
 		}
-	});
-}
+		exportToCsv("liste-espece.csv", rows);
+	},
+        afficheListe: function (event) {
+		var liste = this;
+		var layer = this.props.layer;
+		layer.removeAllFeatures();
+		liste.setState({liste: [], en_cours: true});
+		this.serverRequest = $.get("?t=json&a=liste_especes_extraction&id="+this.props.req+"&mode_liste_especes="+event.target.value, function (req) {
+			for (var i=0; i<req.carres_requete.length; i++) {
+				var f = carre_1km(new OpenLayers.LonLat(req.carres_requete[i].lon*1000, req.carres_requete[i].lat*1000));
+				layer.addFeatures([f]);
+			}
+			layer.map.zoomToExtent(layer.getDataExtent());
+			liste.setState({liste: req.especes, n_citations_par_espece: req.n_citations_par_espece, en_cours:false});
+		});
+	},
+	render: function () {
+		if (!this.props.req)
+			return null;
+		var especes = [];
+		for (var i=0; i<this.state.liste.length; i++) {
+			especes.push(<EspeceRow e={this.state.liste[i]} n_citations={this.state.n_citations_par_espece[this.state.liste[i].id_espece]}/>);
+		}
+		var pas_visible_en_cours = this.state.en_cours?{display:"none"}:{};
+		var visible_en_cours = this.state.en_cours?{}:{display:"none"};
+		return (
+			<div>
+			  <button className="btn btn-info" onClick={this.props.close_cb}>
+			    <span className="glyphicon glyphicon-arrow-left"></span>
+			  </button>
+			  <select name="mode_liste_especes" onChange={this.afficheListe}>
+			    <option value="toutes">Afficher toutes les espèces</option>
+			    <option value="menace">Menacées VU,EN,CR</option>
+			    <option value="rare">Rares PC,R,TR,E</option>
+			    <option value="znieff">Déterminantes ZNIEFF</option>
+			  </select>			
+			  <button className="btn btn-info" onClick={this.afficheListe}>Afficher la liste</button>
+			  <button className="btn btn-info" onClick={this.downloadListe}>CSV</button>
+			  <span style={pas_visible_en_cours}> Nombre d'espèces : {this.state.liste.length}</span>
+			  <div style={visible_en_cours}>Chargement de la liste...</div>
+			  {especes}
+			</div>
+		);
+	}
+});
+
+var RequeteRow = React.createClass({
+	render: function() {
+		return (<tr className='mongo'>
+			<td>{mongo_aff_date(this.props.c.date_creation)}</td>
+			<td>{this.props.c.nom}</td>
+			<td>{this.props.c.carres.length}</td>
+			<td>
+			  <button className="btn btn-default btn-sm btn-primary ouvre_archive" data-id={this.props.id} onClick={this.props.open}>
+			    <span data-id={this.props.id} className="glyphicon glyphicon-folder-open"></span>
+			  </button>
+			</td>
+		</tr>)
+	}
+});
+
+var InterfaceArchive = React.createClass({
+	getInitialState: function () {
+		var id = false;
+		var a = document.createElement('a');
+		a.href = document.location.href;
+		var args = a.search.replace(/^\?/,'').split('&');
+		for (var i=0;i<args.length;i++) {
+			if (args[i].split('=')[0] == 'id') {
+				id = args[i].split('=')[1];
+				break;
+			}
+		}
+		return { archive: id }
+	},
+	render: function () {
+		console.log("render ia()");
+		return(
+			<div>
+			<p>archive = {this.state.archive}</p>
+			<ListeRequete open_cb={this.openArchive} req={this.state.archive} />
+			<ListeEspeces close_cb={this.closeArchive} listerequetes={this} layer={this.props.carto.layer_requete} req={this.state.archive} />
+			</div>
+		);
+	},
+	openArchive: function (event) {
+		var id = event.target.getAttribute('data-id');
+		this.setState({archive: id});
+	},
+    	closeArchive: function (event) {
+		console.log("close archive");
+		this.setState({archive: false});
+	}
+});
+
+var ListeRequete = React.createClass({
+	getInitialState: function () {
+		return { carres: [], loaded: false }
+	},
+	load: function () {
+		var lr = this;
+		$.ajax({
+			url: '?'+$.param({
+				t: "json",
+				a: "liste_archives"
+			}),
+			success: function (data) {
+				lr.setState({
+					carres: data.carres,
+					loaded: true
+				});
+			}
+		});
+	},
+	render: function () {
+		if (this.props.req != false) 
+			return null;
+
+		if (!this.state.loaded) {
+			this.load();
+			return <span>chargement en cours</span>
+		}
+		var rows = [];
+		var cb = this.props.open_cb;
+
+		this.state.carres.forEach(function (c) {
+			var k = c['_id']['$id'];
+			var d = mongo_aff_date(c.date_creation);
+			var obj = <RequeteRow key={k} id={k} c={c} open={cb} />
+			rows.push(obj)
+		});
+
+
+		return (<div><table className="table">
+			  <thead>
+			    <tr>
+			      <th>Date de création</th>
+  			      <th>Nom</th>
+			      <th>Carrés</th>
+			      <th></th>
+			    </tr>
+			  </thead>
+			  <tbody>
+			     {rows}
+			  </tbody>
+			</table></div>
+		);
+	},
+
+});
+
 
 function affiche_carre_requete(id_requete,layer) {
 	var req = null;
@@ -226,12 +417,13 @@ function init_new_cons() {
 	});
 }
 
-
 function init_archives() {
-	charge_liste_requetes();
+	//charge_liste_requetes();
 	carte_archives = new Carto("carte2");
 	carte_archives.layer_requete = new OpenLayers.Layer.Vector('Emprise requête');
 	carte_archives.map.addLayers([carte_archives.layer_requete]);
+	ReactDOM.render(<InterfaceArchive carto={carte_archives} />, document.getElementById("t_requetes"));
+	return;
 	$('#form_liste_especes').on('submit', function () {
 		var form_data = $(this).serializeArray();
 		var id_requete = false;

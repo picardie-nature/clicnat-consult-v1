@@ -210,10 +210,10 @@ class Consult extends clicnat_smarty {
 						try {
 							$docs = $esp->documents_liste();
 						} catch (Exception $e) {
-							$docs = array();
+							$docs = [];
 						}
 						$ref = $esp->get_referentiel_regional();
-						$data['especes'][] = array(
+						$row = [
 							'id_espece'=>$esp->id_espece,
 							'nom_f' => $esp->nom_f,
 							'nom_s' => $esp->nom_s,
@@ -223,13 +223,15 @@ class Consult extends clicnat_smarty {
 							'menace' => isset($ref['categorie'])?$ref['categorie']:null,
 							'determinant_znieff' => $esp->determinant_znieff,
 							'invasif' => $esp->invasif,
-							'carres' => null//$extraction->carres_espece($esp->id_espece)
-						);
+							'carres' => $extraction->carres_espece(1000, 2154, $esp),
+						];
+
+						$data['n_citations_par_espece'] = $extraction->compte_citations_par_espece();
+						$data['especes'][] = $row;
 					}
 					break;
 				case 'espece_carres_extraction':
 					// liste des carrés ou l'espece est présente
-
 					$extr = $this->extraction_utilisateur($_GET['id_requete']);
 					$_SESSION['carres'] = $extr['carres'];
 					$sel = $this->sel();
@@ -245,6 +247,7 @@ class Consult extends clicnat_smarty {
 		} catch (Exception $e) {
 			echo json_encode(array("err" => 1, "msg" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine(), "trace" => $e->getTrace()));
 		}
+		exit();
 	}
 
 	public function display() {
