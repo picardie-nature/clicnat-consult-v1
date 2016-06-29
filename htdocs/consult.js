@@ -107,7 +107,7 @@ var EspeceRow = React.createClass({
 		var rarete_style = this.props.e.rarete == null ? {display:'none'}:{display:'inline'};
 		var menace_style = this.props.e.menace == null ? {display:'none'}:{display:'inline'};
 		var determ_style = this.props.e.determinant_znieff ? {display:'none'}:{display:'inline'};
-
+		var invasi_style = this.props.e.invasif ? {}:{display:'none'};
 		return (
 			<a className="list-group-item">
 				<h4>{nom_1}</h4>
@@ -115,6 +115,7 @@ var EspeceRow = React.createClass({
 				<span className='label label-info' style={rarete_style}>Rareté : {this.props.e.rarete}</span>
 				<span className='label label-info' style={menace_style}>Menace : {this.props.e.menace}</span>
 				<span className='label label-info' style={determ_style}>Déterminant ZNIEFF</span>
+				<span className='label label-info' style={invasi_style}>Invasif</span>
 			</a>
 		);
 	}
