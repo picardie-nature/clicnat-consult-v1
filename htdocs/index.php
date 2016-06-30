@@ -116,7 +116,7 @@ class Consult extends clicnat_smarty {
 
 		$extraction->ajouter_condition(new bobs_ext_c_sans_tag_invalide());
 		$extraction->ajouter_condition(new bobs_ext_c_indice_qualite([3,4]));
-		$extraction->ajouter_condition(new bobs_ext_c_interval_date('01/01/1985',strftime("31/12/%Y",mktime())));
+		$extraction->ajouter_condition(new bobs_ext_c_interval_date('01/01/2006',strftime("31/12/%Y",mktime())));
 		$extraction->ajouter_condition(new bobs_ext_c_effectif_superieur(0));
 
 		// limite départementale si prop agent_departement définit
