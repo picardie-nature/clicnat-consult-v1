@@ -108,10 +108,11 @@ var EspeceRow = React.createClass({
 		var menace_style = this.props.e.menace == null ? {display:'none'}:{display:'inline'};
 		var determ_style = this.props.e.determinant_znieff ? {display:'none'}:{display:'inline'};
 		var invasi_style = this.props.e.invasif ? {}:{display:'none'};
+		var lib_citation = this.props.n_citations > 1?'citations':'citation';
 		return (
 			<a className="list-group-item">
 				<h4>{nom_1}</h4>
-				<p>{nom_2} <span className="pull-right">{this.props.n_citations} citations</span></p>
+				<p>{nom_2} <span className="pull-right">{this.props.n_citations} {lib_citation}</span></p>
 				<span className='label label-info' style={rarete_style}>Rareté : {this.props.e.rarete}</span>
 				<span className='label label-info' style={menace_style}>Menace : {this.props.e.menace}</span>
 				<span className='label label-info' style={determ_style}>Déterminant ZNIEFF</span>
@@ -182,8 +183,7 @@ var ListeEspeces = React.createClass({
 			    <option value="rare">Rares PC,R,TR,E</option>
 			    <option value="znieff">Déterminantes ZNIEFF</option>
 			  </select>			
-			  <button className="btn btn-info" onClick={this.afficheListe}>Afficher la liste</button>
-			  <button className="btn btn-info" onClick={this.downloadListe}>CSV</button>
+			  <button className="btn btn-info" onClick={this.downloadListe}>Télécharger CSV</button>
 			  <span style={pas_visible_en_cours}> Nombre d'espèces : {this.state.liste.length}</span>
 			  <div style={visible_en_cours}>Chargement de la liste...</div>
 			  {especes}

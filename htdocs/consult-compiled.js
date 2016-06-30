@@ -94,6 +94,7 @@ var EspeceRow = React.createClass({
 		var menace_style = this.props.e.menace == null ? { display: 'none' } : { display: 'inline' };
 		var determ_style = this.props.e.determinant_znieff ? { display: 'none' } : { display: 'inline' };
 		var invasi_style = this.props.e.invasif ? {} : { display: 'none' };
+		var lib_citation = this.props.n_citations > 1 ? 'citations' : 'citation';
 		return React.createElement(
 			'a',
 			{ className: 'list-group-item' },
@@ -111,7 +112,8 @@ var EspeceRow = React.createClass({
 					'span',
 					{ className: 'pull-right' },
 					this.props.n_citations,
-					' citations'
+					' ',
+					lib_citation
 				)
 			),
 			React.createElement(
@@ -210,13 +212,8 @@ var ListeEspeces = React.createClass({
 			),
 			React.createElement(
 				'button',
-				{ className: 'btn btn-info', onClick: this.afficheListe },
-				'Afficher la liste'
-			),
-			React.createElement(
-				'button',
 				{ className: 'btn btn-info', onClick: this.downloadListe },
-				'CSV'
+				'Télécharger CSV'
 			),
 			React.createElement(
 				'span',
