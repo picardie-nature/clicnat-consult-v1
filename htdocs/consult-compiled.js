@@ -92,7 +92,7 @@ var EspeceRow = React.createClass({
 		}
 		var rarete_style = this.props.e.rarete == null ? { display: 'none' } : { display: 'inline' };
 		var menace_style = this.props.e.menace == null ? { display: 'none' } : { display: 'inline' };
-		var determ_style = this.props.e.determinant_znieff ? { display: 'none' } : { display: 'inline' };
+		var determ_style = this.props.e.determinant_znieff ? { display: 'inline' } : { display: 'none' };
 		var invasi_style = this.props.e.invasif ? {} : { display: 'none' };
 		var lib_citation = this.props.n_citations > 1 ? 'citations' : 'citation';
 		return React.createElement(

@@ -50,8 +50,7 @@ class Consult extends clicnat_smarty {
 			} else {
 				if (!$utilisateur->prop('agent') == 1) {
 					$_SESSION['id_utilisateur'] = false;
-					$prop = $utilisateur->prop('agent');
-					$this->ajoute_alerte('danger', "Accès réservé - demander l'activation de votre compte si nécessaire ($prop)");
+					$this->ajoute_alerte('danger', "Accès réservé - demander l'activation de votre compte si nécessaire");
 				} else {
 					if (!$utilisateur->auth_ok(trim($_POST['clicnat_pwd']))) {
 						$_SESSION['id_utilisateur'] = false;
@@ -73,6 +72,7 @@ class Consult extends clicnat_smarty {
 	}
 
 	public function before_nouvelle_recherche() {
+		$_SESSION['carres'] = [];
 	}
 
 	public function before_archives() {
