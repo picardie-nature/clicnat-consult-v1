@@ -202,7 +202,7 @@ var ListeEspeces = React.createClass({
 				React.createElement(
 					'option',
 					{ value: 'rare' },
-					'Rares PC,R,TR,E'
+					'Rares PC,AR,R,TR,E'
 				),
 				React.createElement(
 					'option',

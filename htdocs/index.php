@@ -86,7 +86,7 @@ class Consult extends clicnat_smarty {
 				$extraction->ajouter_condition(new bobs_ext_c_espece_det_znieff());
 				break;
 			case 'rare':
-				$extraction->ajouter_condition(new bobs_ext_c_ref_rarete(['R','TR','E','D']));
+				$extraction->ajouter_condition(new bobs_ext_c_ref_rarete(['R','AR','TR','E','D']));
 				break;
 			case 'menace':
 				$extraction->ajouter_condition(new bobs_ext_c_ref_menace(['VU','EN','CR']));

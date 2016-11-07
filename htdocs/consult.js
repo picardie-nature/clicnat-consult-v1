@@ -180,7 +180,7 @@ var ListeEspeces = React.createClass({
 			  <select name="mode_liste_especes" onChange={this.afficheListe}>
 			    <option value="toutes">Afficher toutes les espèces</option>
 			    <option value="menace">Menacées VU,EN,CR</option>
-			    <option value="rare">Rares PC,R,TR,E</option>
+			    <option value="rare">Rares PC,AR,R,TR,E</option>
 			    <option value="znieff">Déterminantes ZNIEFF</option>
 			  </select>			
 			  <button className="btn btn-info" onClick={this.downloadListe}>Télécharger CSV</button>
